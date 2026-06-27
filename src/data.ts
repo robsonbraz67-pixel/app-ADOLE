@@ -3,6 +3,13 @@ import { LICAO_4, LICAO_5, LICAO_6 } from "./data3";
 import { LICAO_7, LICAO_8, LICAO_9 } from "./data4";
 import { LICAO_10, LICAO_11, LICAO_12, LICAO_13 } from "./data5";
 
+export const DEMO = [
+  { id: 'demo-ana', nome: 'Ana Clara', avatar: '🌻', xp: 620, dias: 5 },
+  { id: 'demo-gabi', nome: 'Gabriel', avatar: '🦁', xp: 540, dias: 4 },
+  { id: 'demo-lu', nome: 'Luiza', avatar: '⭐', xp: 455, dias: 4 },
+  { id: 'demo-matheus', nome: 'Matheus', avatar: '🔥', xp: 380, dias: 3 },
+];
+
 export const LICAO_1 = {
   titulo: "Lição 1 - Entregando a Vida pela Fé (27 de junho a 3 de julho)",
   semana: "2026-W26",
