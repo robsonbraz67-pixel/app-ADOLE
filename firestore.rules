@@ -34,7 +34,7 @@ service cloud.firestore {
         && data.id is string
         && data.nome is string && data.nome.size() > 0 && data.nome.size() <= 50
         && (!data.keys().hasAny(['turma']) || data.turma is string)
-        && data.avatar is string && data.avatar.size() > 0 && data.avatar.size() <= 500000
+        && data.avatar is string && data.avatar.size() > 0 && data.avatar.size() <= 1048576
         && data.email is string && data.email.size() > 0 && data.email.size() <= 100
         && (!data.keys().hasAny(['criadoEm']) || data.criadoEm is string)
         && (!data.keys().hasAny(['isAdmin']) || data.isAdmin is bool)
@@ -93,7 +93,6 @@ service cloud.firestore {
         && isOwner(existing().userId)
         && incoming().userId == existing().userId
         && incoming().week == existing().week
-        && (!existing().keys().hasAny(['trimestre']) || incoming().trimestre == existing().trimestre || !incoming().keys().hasAny(['trimestre']))
         && incoming().diff(existing()).affectedKeys().hasOnly(['trimestre', 'xp', 'streak', 'done', 'history', 'nome', 'avatar', 'isAdmin', 'updatedAt'])
         && isValidProgress(incoming());
 
