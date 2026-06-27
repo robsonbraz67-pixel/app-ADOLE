@@ -1,0 +1,103 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+
+    function incoming() {
+      return request.resource.data;
+    }
+
+    function existing() {
+      return resource.data;
+    }
+
+    function isUserAdmin() {
+      return isAuthenticated() 
+        && exists(/databases/$(database)/documents/users/$(request.auth.uid))
+        && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.keys().hasAny(['isAdmin'])
+        && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.isAdmin == true;
+    }
+
+    function isValidUser(data) {
+      return data.keys().hasAll(['id', 'nome', 'avatar', 'email'])
+        && data.id is string
+        && data.nome is string && data.nome.size() > 0 && data.nome.size() <= 50
+        && (!data.keys().hasAny(['turma']) || data.turma is string)
+        && data.avatar is string && data.avatar.size() > 0 && data.avatar.size() <= 500000
+        && data.email is string && data.email.size() > 0 && data.email.size() <= 100
+        && (!data.keys().hasAny(['criadoEm']) || data.criadoEm is string)
+        && (!data.keys().hasAny(['isAdmin']) || data.isAdmin is bool)
+        && (!data.keys().hasAny(['manualNotification']) || data.manualNotification is map);
+    }
+
+    match /users/{userId} {
+      allow get, list: if isOwner(userId) || isUserAdmin();
+      
+      allow create: if isOwner(userId)
+        && incoming().id == userId
+        && incoming().keys().hasOnly(['id', 'nome', 'turma', 'avatar', 'email', 'criadoEm', 'isAdmin', 'manualNotification'])
+        && (!incoming().keys().hasAny(['isAdmin']) || incoming().email.lower() == 'robsonbraz67@gmail.com')
+        && isValidUser(incoming());
+        
+      allow update: if (isOwner(userId)
+        && incoming().diff(existing()).affectedKeys().hasOnly(['nome', 'turma', 'avatar', 'isAdmin', 'criadoEm', 'manualNotification'])
+        && incoming().id == existing().id
+        && incoming().email == existing().email
+        && (!incoming().diff(existing()).affectedKeys().hasAny(['isAdmin']) || incoming().email.lower() == 'robsonbraz67@gmail.com')
+        && isValidUser(incoming())) || (
+        isUserAdmin() 
+        && incoming().diff(existing()).affectedKeys().hasAny(['isAdmin', 'manualNotification'])
+        && isValidUser(incoming()));
+        
+      allow delete: if false;
+    }
+
+    function isValidProgress(data) {
+      return data.keys().hasAll(['userId', 'week', 'xp', 'streak', 'nome', 'avatar'])
+        && data.userId is string
+        && data.week is string && data.week.size() > 0 && data.week.size() <= 20
+        && (!data.keys().hasAny(['trimestre']) || data.trimestre is string)
+        && data.xp is number
+        && data.streak is number
+        && data.nome is string && data.nome.size() <= 50
+        && data.avatar is string && data.avatar.size() <= 500000
+        && (!data.keys().hasAny(['done']) || data.done is list && data.done.size() <= 7)
+        && (!data.keys().hasAny(['history']) || data.history is map)
+        && (!data.keys().hasAny(['updatedAt']) || data.updatedAt == request.time)
+        && (!data.keys().hasAny(['isAdmin']) || data.isAdmin is bool);
+    }
+
+    match /progress/{progressId} {
+      // Anyone authenticated can read for ranking
+      allow get, list: if isAuthenticated();
+
+      allow create: if isAuthenticated()
+        && progressId == incoming().userId + '_' + incoming().week
+        && isOwner(incoming().userId)
+        && incoming().keys().hasOnly(['userId', 'week', 'trimestre', 'xp', 'streak', 'done', 'history', 'nome', 'avatar', 'isAdmin', 'updatedAt'])
+        && isValidProgress(incoming())
+        && exists(/databases/$(database)/documents/users/$(incoming().userId));
+        
+      allow update: if isAuthenticated()
+        && isOwner(existing().userId)
+        && incoming().userId == existing().userId
+        && incoming().week == existing().week
+        && (!existing().keys().hasAny(['trimestre']) || incoming().trimestre == existing().trimestre || !incoming().keys().hasAny(['trimestre']))
+        && incoming().diff(existing()).affectedKeys().hasOnly(['trimestre', 'xp', 'streak', 'done', 'history', 'nome', 'avatar', 'isAdmin', 'updatedAt'])
+        && isValidProgress(incoming());
+
+      allow delete: if false;
+    }
+  }
+}
