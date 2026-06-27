@@ -87,19 +87,24 @@ export default function App() {
       setLicao(l);
 
       let r = gs('ranking_' + l.semana, []);
-      if (r.length === 0 && l.semana === '2026-W25') r = rankDemo();
       try {
         const user = await waitForAuthInit();
         if (user) {
           const dbRanking = await getWeeklyRanking(l.semana);
-          if (dbRanking.length > 0 || l.semana !== '2026-W25') {
-            r = dbRanking;
-          }
-          ss('ranking_' + l.semana, r);
+          r = dbRanking;
         }
       } catch(e) {
         console.error("Error loading ranking:", e);
       }
+      
+      if (l.semana === '2026-W25') {
+         const demo = rankDemo();
+         demo.forEach((d: any) => {
+            if (!r.find((m: any) => m.id === d.id)) r.push(d);
+         });
+         r.sort((a: any, b: any) => b.xp - a.xp);
+      }
+      ss('ranking_' + l.semana, r);
       if (unmounted) return;
       setRanking(r);
 
@@ -160,7 +165,13 @@ export default function App() {
 
     let p = gs(semKey(l), PROG0);
     let r = gs('ranking_' + l.semana, []);
-    if (r.length === 0 && l.semana === '2026-W25') r = rankDemo();
+    if (l.semana === '2026-W25') {
+       const demo = rankDemo();
+       demo.forEach((d: any) => {
+          if (!r.find((m: any) => m.id === d.id)) r.push(d);
+       });
+       r.sort((a: any, b: any) => b.xp - a.xp);
+    }
 
     try {
       await saveUser(j);
@@ -279,8 +290,14 @@ export default function App() {
         } else {
           dbRanking = await getSeasonRanking(l.trimestre);
         }
-        if (dbRanking.length === 0 && l.semana === '2026-W25' && type === 'week') {
-           dbRanking = rankDemo();
+        if (l.semana === '2026-W25' && type === 'week') {
+           const demo = rankDemo();
+           demo.forEach((d: any) => {
+              if (!dbRanking.find((m: any) => m.id === d.id)) {
+                 dbRanking.push(d);
+              }
+           });
+           dbRanking.sort((a, b) => b.xp - a.xp);
         }
         setRanking(dbRanking);
         if (type === 'week') {
@@ -301,7 +318,6 @@ export default function App() {
 
     let p = gs(semKey(newLicao), PROG0);
     let r = gs('ranking_' + newLicao.semana, []);
-    if (r.length === 0 && newLicao.semana === '2026-W25') r = rankDemo();
 
     setRanking(r);
     setProg({ ...p, pos: calcPos(r, jogador.id, p.xp || 0) });
@@ -310,8 +326,14 @@ export default function App() {
       const user = await waitForAuthInit();
       if (user) {
         const dbRanking = await getWeeklyRanking(newLicao.semana);
-        if (dbRanking.length > 0 || newLicao.semana !== '2026-W25') {
-          r = dbRanking;
+        r = dbRanking;
+        
+        if (newLicao.semana === '2026-W25') {
+           const demo = rankDemo();
+           demo.forEach((d: any) => {
+              if (!r.find((m: any) => m.id === d.id)) r.push(d);
+           });
+           r.sort((a: any, b: any) => b.xp - a.xp);
         }
         setRanking(r);
 

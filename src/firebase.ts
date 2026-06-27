@@ -124,7 +124,7 @@ export const saveProgress = async (prog: any, week: string, userId: string, nome
     avatar,
     isAdmin: !!isAdmin,
     updatedAt: serverTimestamp()
-  });
+  }, { merge: true });
 };
 
 export const getProgress = async (userId: string, week: string) => {

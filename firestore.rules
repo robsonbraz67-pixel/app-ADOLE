@@ -70,9 +70,9 @@ service cloud.firestore {
         && (!data.keys().hasAny(['trimestre']) || data.trimestre is string)
         && data.xp is number
         && data.streak is number
-        && data.nome is string && data.nome.size() <= 50
-        && data.avatar is string && data.avatar.size() <= 500000
-        && (!data.keys().hasAny(['done']) || data.done is list && data.done.size() <= 7)
+        && data.nome is string
+        && data.avatar is string
+        && (!data.keys().hasAny(['done']) || data.done is list)
         && (!data.keys().hasAny(['history']) || data.history is map)
         && (!data.keys().hasAny(['updatedAt']) || data.updatedAt == request.time)
         && (!data.keys().hasAny(['isAdmin']) || data.isAdmin is bool);
